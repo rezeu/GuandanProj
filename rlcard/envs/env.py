@@ -40,7 +40,7 @@ class Env(object):
 
         # Get the number of players/actions in this game
         self.num_players = self.game.get_num_players()
-        self.num_actions = self.game.get_num_actions()
+        # self.num_actions = self.game.get_num_actions()
 
         # A counter for the timesteps
         self.timestep = 0
