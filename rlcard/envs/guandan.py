@@ -20,8 +20,8 @@ class GuandanEnv(Env):
         self.name = 'guandan'
         self.game = Game()
         super().__init__(config)
-        self.state_shape = [[790], [901], [901]]# TODO
-        self.action_shape = [[54] for _ in range(self.num_players)] # TODO
+        self.state_shape = [[1722], [1722], [1722],[1722]]# TODO
+        self.action_shape = [[108] for _ in range(self.num_players)] # TODO
 
     def _extract_state(self, state):
         ''' Encode state
@@ -61,6 +61,7 @@ class GuandanEnv(Env):
                               opponent_up_num_cards_left,
                               opponent_down_num_cards_left,
                               teammate_num_cards_left))
+        # print(len(obs))
         
         extracted_state = OrderedDict({'obs': obs, 'legal_actions': self._get_legal_actions()})
         extracted_state['raw_obs'] = state
@@ -74,18 +75,18 @@ class GuandanEnv(Env):
         Returns:
             payoffs (list): a list of payoffs for each player
         '''
-        return self.game.judger.judge_payoffs(self.game.round.landlord_id, self.game.winner_id)
+        return self.game.judger.judge_payoffs(self.game.winner_id)
 
-    # def _decode_action(self, action_id):
-    #     ''' Action id -> the action in the game. Must be implemented in the child class.
+    def _decode_action(self, action_embed):
+        ''' Action -> the action in the game. Must be implemented in the child class.
 
-    #     Args:
-    #         action_id (int): the id of the action
+        Args:
+            action (np.array): the id of the action
 
-    #     Returns:
-    #         action (string): the action that will be passed to the game engine.
-    #     '''
-    #     return self._ID_2_ACTION[action_id]
+        Returns:
+            action (string): the action that will be passed to the game engine.
+        '''
+        return _array2cards(action_embed)
 
     def _get_legal_actions(self):
         ''' Get all legal actions for current state
@@ -123,6 +124,8 @@ class GuandanEnv(Env):
 Card2Column = {'3': 0, '4': 1, '5': 2, '6': 3, '7': 4, '8': 5, '9': 6, 'T': 7,
                'J': 8, 'Q': 9, 'K': 10, 'A': 11, '2': 12}
 
+Column2Card = {v: k for k, v in Card2Column.items()}
+
 NumOnes2Array = {0: np.array([0, 0, 0, 0, 0, 0, 0, 0]),
                  1: np.array([1, 0, 0, 0, 0, 0, 0, 0]),
                  2: np.array([1, 1, 0, 0, 0, 0, 0, 0]),
@@ -150,6 +153,35 @@ def _cards2array(cards):
         else:
             matrix[:, Card2Column[card]] = NumOnes2Array[num_times]
     return np.concatenate((matrix.flatten('F'), jokers))
+
+
+def _array2cards(arr):
+    arr = np.asarray(arr)
+
+    # pass
+    if arr.sum() == 0:
+        return 'pass'
+
+    assert arr.shape[0] == 108
+
+    cards = ''
+
+    matrix = arr[:104].reshape((8, 13), order='F')
+
+    for col in range(13):
+        num = int(matrix[:, col].sum())
+        if num > 0:
+            cards += Column2Card[col] * num
+
+    jokers = arr[104:]
+
+    b_num = int(jokers[0:2].sum())
+    r_num = int(jokers[2:4].sum())
+
+    cards+='B' * b_num
+    cards+='R' * r_num
+
+    return cards
 
 def _get_one_hot_array(num_left_cards, max_num_cards):
     one_hot = np.zeros(max_num_cards, dtype=np.int8)

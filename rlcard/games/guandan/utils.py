@@ -240,7 +240,7 @@ def get_gt_cards(player, greater_player):
     gt_cards = ['pass']
     current_hand = cards2str(player.current_hand)
     target_cards = greater_player.played_cards
-    target_types = CARD_TYPE[0][target_cards]
+    target_types = CARD_TYPE[0].get(target_cards,[["solo","0"]])
     type_dict = {}
     for card_type, weight in target_types:
         if card_type not in type_dict:

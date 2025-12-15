@@ -45,16 +45,12 @@ class TestGuandanEnv(unittest.TestCase):
         env = rlcard.make('guandan')
         env.set_agents([RandomAgent(12345) for _ in range(env.num_players)])
         trajectories, payoffs = env.run(is_training=False)
-        self.assertEqual(len(trajectories), 3)
+        self.assertEqual(len(trajectories), 4)
         win = []
         for player_id, payoff in enumerate(payoffs):
             if payoff == 1:
                 win.append(player_id)
-        if len(win) == 1:
-            self.assertEqual(env.game.players[win[0]].role, 'landlord')
-        if len(win) == 2:
-            self.assertEqual(env.game.players[win[0]].role, 'peasant')
-            self.assertEqual(env.game.players[win[1]].role, 'peasant')
+        assert len(win)==2
 
     # def test_decode_action(self):
     #     env = rlcard.make('guandan')

@@ -61,7 +61,8 @@ class DMCAgent:
         action_keys, values = self.predict(state)
 
         if self.exp_epsilon > 0 and np.random.rand() < self.exp_epsilon:
-            action = np.random.choice(action_keys)
+            choiceidx = np.random.choice(range(len(action_keys)))
+            action = action_keys[choiceidx]
         else:
             action_idx = np.argmax(values)
             action = action_keys[action_idx]
@@ -92,8 +93,8 @@ class DMCAgent:
         # Prepare obs and actions
         obs = state['obs'].astype(np.float32)
         legal_actions = state['legal_actions']
-        action_keys = np.array(list(legal_actions.keys()))
-        action_values = list(legal_actions.values())
+        action_keys = np.array(list(legal_actions))
+        action_values = list(legal_actions)
         # One-hot encoding if there is no action features
         for i in range(len(action_values)):
             if action_values[i] is None:
@@ -150,6 +151,7 @@ class DMCModel:
             agent.eval()
 
     def parameters(self, index):
+        # print(index)
         return self.agents[index].parameters()
 
     def get_agent(self, index):

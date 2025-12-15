@@ -348,12 +348,10 @@ class GuandanJudger:
         return False
 
     @staticmethod
-    def judge_payoffs(landlord_id, winner_id):
-        payoffs = np.array([0, 0, 0])
-        if winner_id == landlord_id:
-            payoffs[landlord_id] = 1
-        else:
-            for index, _ in enumerate(payoffs):
-                if index != landlord_id:
-                    payoffs[index] = 1
+    def judge_payoffs(winner_id):
+        assert type(winner_id)== int
+        payoffs = np.array([0, 0, 0, 0])
+        for index, _ in enumerate(payoffs):
+            if index not in [winner_id, (winner_id + 2) % 4]:
+                payoffs[index] = 1
         return payoffs
