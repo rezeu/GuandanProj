@@ -85,27 +85,27 @@ class Env(object):
 
         return self._extract_state(next_state), player_id
 
-    def step_back(self):
-        ''' Take one step backward.
+    # def step_back(self):
+    #     ''' Take one step backward.
 
-        Returns:
-            (tuple): Tuple containing:
+    #     Returns:
+    #         (tuple): Tuple containing:
 
-                (dict): The previous state
-                (int): The ID of the previous player
+    #             (dict): The previous state
+    #             (int): The ID of the previous player
 
-        Note: Error will be raised if step back from the root node.
-        '''
-        if not self.allow_step_back:
-            raise Exception('Step back is off. To use step_back, please set allow_step_back=True in rlcard.make')
+    #     Note: Error will be raised if step back from the root node.
+    #     '''
+    #     if not self.allow_step_back:
+    #         raise Exception('Step back is off. To use step_back, please set allow_step_back=True in rlcard.make')
 
-        if not self.game.step_back():
-            return False
+    #     if not self.game.step_back():
+    #         return False
 
-        player_id = self.get_player_id()
-        state = self.get_state(player_id)
+    #     player_id = self.get_player_id()
+    #     state = self.get_state(player_id)
 
-        return state, player_id
+    #     return state, player_id
 
     def set_agents(self, agents):
         '''

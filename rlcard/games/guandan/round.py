@@ -78,27 +78,27 @@ class GuandanRound:
         self.greater_player = player.play(action, self.greater_player)
         return self.greater_player
 
-    def step_back(self, players):
-        ''' Reverse the last action
+    # def step_back(self, players):
+    #     ''' Reverse the last action
 
-        Args:
-            players (list): list of DoudizhuPlayer objects
-        Returns:
-            The last player id and the cards played
-        '''
-        player_id, cards = self.trace.pop()
-        self.current_player = player_id
-        if (cards != 'pass'):
-            for card in cards:
-                # self.played_cards.remove(card)
-                self.played_cards[player_id][CARD_RANK_STR_INDEX[card]] -= 1
-            self.public['played_cards'] = self.cards_ndarray_to_str(self.played_cards)
-        greater_player_id = self.find_last_greater_player_id_in_trace()
-        if (greater_player_id is not None):
-            self.greater_player = players[greater_player_id]
-        else:
-            self.greater_player = None
-        return player_id, cards
+    #     Args:
+    #         players (list): list of DoudizhuPlayer objects
+    #     Returns:
+    #         The last player id and the cards played
+    #     '''
+    #     player_id, cards = self.trace.pop()
+    #     self.current_player = player_id
+    #     if (cards != 'pass'):
+    #         for card in cards:
+    #             # self.played_cards.remove(card)
+    #             self.played_cards[player_id][CARD_RANK_STR_INDEX[card]] -= 1
+    #         self.public['played_cards'] = self.cards_ndarray_to_str(self.played_cards)
+    #     greater_player_id = self.find_last_greater_player_id_in_trace()
+    #     if (greater_player_id is not None):
+    #         self.greater_player = players[greater_player_id]
+    #     else:
+    #         self.greater_player = None
+    #     return player_id, cards
 
     def find_last_greater_player_id_in_trace(self):
         ''' Find the last greater_player's id in trace

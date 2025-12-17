@@ -80,33 +80,6 @@ class GuandanGame:
 
         return state, next_id
 
-    def step_back(self):
-        ''' Return to the previous state of the game
-
-        Returns:
-            (bool): True if the game steps back successfully
-        '''
-        if not self.round.trace:
-            return False
-
-        #winner_id will be always None no matter step_back from any case
-        self.winner_id = None
-
-        #reverse round
-        player_id, cards = self.round.step_back(self.players)
-
-        #reverse player
-        if (cards != 'pass'):
-            self.players[player_id].played_cards = self.round.find_last_played_cards_in_trace(player_id)
-        self.players[player_id].play_back()
-
-        #reverse judger.played_cards if needed
-        if (cards != 'pass'):
-            self.judger.restore_playable_cards(player_id)
-
-        self.state = self.get_state(self.round.current_player)
-        return True
-
     def get_state(self, player_id):
         ''' Return player's state
 

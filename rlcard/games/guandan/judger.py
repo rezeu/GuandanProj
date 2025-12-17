@@ -307,14 +307,14 @@ class GuandanJudger:
         self._recorded_removed_playable_cards[player_id].append(removed_playable_cards)
         return self.playable_cards[player_id]
 
-    def restore_playable_cards(self, player_id):
-        ''' restore playable_cards for judger for game.step_back().
+    # def restore_playable_cards(self, player_id):
+    #     ''' restore playable_cards for judger for game.step_back().
 
-        Args:
-            player_id: The id of the player whose playable_cards need to be restored
-        '''
-        removed_playable_cards = self._recorded_removed_playable_cards[player_id].pop()
-        self.playable_cards[player_id].update(removed_playable_cards)
+    #     Args:
+    #         player_id: The id of the player whose playable_cards need to be restored
+    #     '''
+    #     removed_playable_cards = self._recorded_removed_playable_cards[player_id].pop()
+    #     self.playable_cards[player_id].update(removed_playable_cards)
 
     def get_playable_cards(self, player):
         ''' Provide all legal cards the player can play according to his
