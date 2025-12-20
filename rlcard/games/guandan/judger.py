@@ -255,7 +255,12 @@ class GuandanJudger:
         #rocket
         if (cards_count[13] and cards_count[14]):
             playable_cards.add(CARD_RANK_STR[13] + CARD_RANK_STR[14])
-        return playable_cards
+
+        mod_playable_cards = set()
+        for actual in playable_cards:
+            mod_playable_cards.add({["actual"]:actual,["claim"]:actual})
+
+        return mod_playable_cards
 
     def __init__(self, players, np_random):
         ''' Initilize the Judger class for Dou Dizhu
@@ -295,14 +300,16 @@ class GuandanJudger:
             position = player.singles.find(missed)
             player.singles = player.singles[position+1:]
             for cards in playable_cards:
-                if missed in cards or (not contains_cards(current_hand, cards)):
-                    removed_playable_cards.append(cards)
+                actual_cards = cards['actual']
+                if missed in actual_cards or (not contains_cards(current_hand, actual_cards)):
+                    removed_playable_cards.append(actual_cards)
                     self.playable_cards[player_id].remove(cards)
         else:
             for cards in playable_cards:
-                if not contains_cards(current_hand, cards):
+                actual_cards = cards['actual']
+                if not contains_cards(current_hand, actual_cards):
                     #del self.playable_cards[player_id][cards]
-                    removed_playable_cards.append(cards)
+                    removed_playable_cards.append(actual_cards)
                     self.playable_cards[player_id].remove(cards)
         self._recorded_removed_playable_cards[player_id].append(removed_playable_cards)
         return self.playable_cards[player_id]

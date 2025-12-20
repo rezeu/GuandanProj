@@ -100,15 +100,6 @@ class GuandanGame:
 
         return state
 
-    @staticmethod
-    def get_num_actions():
-        ''' Return the total number of abstract acitons
-
-        Returns:
-            int: the total number of abstract actions of doudizhu
-        '''
-        raise NotImplementedError("cant calc num_actions")
-
     def get_player_id(self):
         ''' Return current player's id
 

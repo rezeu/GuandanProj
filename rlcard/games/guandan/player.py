@@ -86,13 +86,13 @@ class GuandanPlayer:
             object of DoudizhuPlayer: If there is a new greater_player, return it, if not, return None
         '''
         trans = {'B': 'BJ', 'R': 'RJ'}
-        if action == 'pass':
+        if action['actual'] == 'pass':
             self._recorded_played_cards.append([])
             return greater_player
         else:
             removed_cards = []
-            self.played_cards = action
-            for play_card in action:
+            self.played_cards = action['actual']
+            for play_card in action['actual']:
                 if play_card in trans:
                     play_card = trans[play_card]
                 for _, remain_card in enumerate(self._current_hand):
