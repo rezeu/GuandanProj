@@ -48,7 +48,13 @@ register(
     entry_point='rlcard.envs.bridge:BridgeEnv',
 )
 
+# register(
+#     env_id='guandan',
+#     entry_point='rlcard.envs.guandan:GuandanEnv',
+# )
+
+# Guandan v2 - Complete implementation with wildcards and wind-taking
 register(
-    env_id='guandan',
-    entry_point='rlcard.envs.guandan:GuandanEnv',
+    env_id='guandan-v2',
+    entry_point='rlcard.envs.guandan_v2:GuandanEnv',
 )
