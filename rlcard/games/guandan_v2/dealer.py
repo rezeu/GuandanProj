@@ -5,7 +5,7 @@ Deals cards and manages deck using card IDs
 
 import numpy as np
 from rlcard.utils import init_108_deck
-from rlcard.games.guandan_v2.card_utils import cards2str_ids
+from rlcard.games.guandan_v2.card_utils import cards2str_ids, RANK_TO_VALUE, RANK_ORDER, SUIT_ORDER
 
 class GuandanDealer:
     """Dealer for Guandan game - 4 players, 108 cards"""
@@ -17,50 +17,62 @@ class GuandanDealer:
         self.deck_ids = self._cards_to_ids(self.deck)  # Convert to IDs
         self.deck_ids.sort()  # Sort for consistency
         
-    def _cards_to_ids(self, cards):
-        """Convert Card objects to card IDs"""
-        # Map from Card's rank+suit to ID
-        # Card(rank='3', suit='♥') -> 0
-        # Card(rank='BJ', suit='BJ') -> 26 (first deck)
-        # Card(rank='BJ', suit='BJ') -> 80 (second deck)
+        # Validate uniqueness
+        if len(self.deck_ids) != len(set(self.deck_ids)):
+            raise ValueError("Duplicate card IDs detected in deck!")
         
+    def _cards_to_ids(self, cards):
+        """Convert Card objects to card IDs (0-107)"""
         ids = []
-        for card in cards:
+        for idx, card in enumerate(cards):
             if card.rank == '':  # Joker case
-                rank = card.suit
-                suit = card.suit
+                rank = card.suit  # 'BJ' or 'RJ'
+                suit = card.suit  # 'BJ' or 'RJ'
             else:
                 rank = card.rank
                 suit = card.suit
             
-            # Find matching ID
-            id_val = self._find_card_id(rank, suit, len(ids))
+            # Find card ID based on position in deck
+            id_val = self._find_card_id(rank, suit, idx)
             ids.append(id_val)
         
         return ids
     
     def _find_card_id(self, rank, suit, position):
-        """Find card ID based on rank and suit"""
-        # Use position to determine which deck (0-53 for first, 54-107 for second)
+        """Find card ID (0-107) based on rank, suit, and position in deck"""
+        # Position < 54: first deck (ID 0-53)
+        # Position >= 54: second deck (ID 54-107)
         deck_offset = 0 if position < 54 else 54
         
-        # Map suit to offset within deck
-        suit_order = {'♥': 0, '♦': 1, '♣': 2, '♠': 3, 'BJ': 4, 'RJ': 4}
-        rank_order = {'3': 0, '4': 1, '5': 2, '6': 3, '7': 4, '8': 5, '9': 6, 
-                     'T': 7, 'J': 8, 'Q': 9, 'K': 10, 'A': 11, '2': 12, 
-                     'BJ': 13, 'RJ': 14}
-        
+        # Size-specific mapping
         if rank in ['BJ', 'RJ']:
-            # Jokers have special handling
-            if rank == 'BJ':
-                return deck_offset + 52  # BJ position
-            else:
-                return deck_offset + 53  # RJ position
+            # Jokers: first deck positions 52-53, second deck 106-107
+            return deck_offset + (52 if rank == 'BJ' else 53)
         
-        # Regular cards
-        suit_offset = suit_order.get(suit, 0) * 13
-        rank_offset = rank_order.get(rank, 0)
-        return deck_offset + suit_offset + rank_offset
+        # Regular cards (3-2, A, K, Q, J, T)
+        # Map suit symbols: S->♠, H->♥, D->♦, C->♣
+        suit_map = {'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣'}
+        if suit in suit_map:
+            suit = suit_map[suit]
+        
+        # Use RANK_TO_VALUE from card_utils
+        if rank not in RANK_TO_VALUE:
+            raise ValueError(f"Invalid rank: {rank}")
+        
+        if suit not in SUIT_ORDER:
+            raise ValueError(f"Invalid suit: {suit}")
+        
+        rank_value = RANK_TO_VALUE[rank]  # 0-14
+        suit_value = SUIT_ORDER[suit]     # 0-3 for suits
+        
+        # For regular cards (not jokers):
+        # ID = deck_offset + suit_value * 13 + rank_value
+        # where rank_value is position in RANK_ORDER (0-12 for 3-2)
+        if rank_value <= 12:  # 3, 4, 5, 6, 7, 8, 9, T, J, Q, K, A, 2
+            return deck_offset + suit_value * 13 + rank_value
+        else:
+            # Should not happen for regular cards
+            raise ValueError(f"Invalid rank for regular card: {rank}")
     
     def shuffle(self):
         """Shuffle the deck"""
@@ -88,6 +100,10 @@ class GuandanDealer:
             
             player.set_current_hand(player_hand)
             player.initial_hand = cards2str_ids(player_hand)
+            
+            # Validate no duplicates in this player's hand
+            if len(player_hand) != len(set(player_hand)):
+                raise ValueError(f"Duplicate cards in player {i}'s hand!")
     
     def determine_role(self, players):
         """

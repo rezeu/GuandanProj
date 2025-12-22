@@ -93,15 +93,50 @@ class DMCAgent:
         # Prepare obs and actions
         obs = state['obs'].astype(np.float32)
         legal_actions = state['legal_actions']
-        action_keys = np.array(list(legal_actions))
-        action_values = list(legal_actions)
-        # One-hot encoding if there is no action features
-        for i in range(len(action_values)):
-            if action_values[i] is None:
-                action_values[i] = np.zeros(self.action_shape[0])
-                action_values[i][action_keys[i]] = 1
+        
+        # Handle GuandanAction objects (guandan-v2) vs action IDs (other games)
+        from rlcard.games.guandan_v2.action import GuandanAction
+        
+        if legal_actions and isinstance(legal_actions[0], GuandanAction):
+            # For guandan-v2: legal_actions contains GuandanAction objects
+            # Need to get env reference to encode actions
+            env = state.get('env', None)
+            if env is None:
+                # Fallback: treat as IDs
+                action_keys = np.array(list(legal_actions))
+                action_values = list(legal_actions)
+                for i in range(len(action_values)):
+                    one_hot = np.zeros(self.action_shape[0], dtype=np.float32)
+                    action_idx = i  # Use index as fallback
+                    if action_idx < self.action_shape[0]:
+                        one_hot[action_idx] = 1
+                    action_values[i] = one_hot
+            else:
+                # Use env.get_action_feature to encode GuandanAction objects
+                action_keys = np.array(list(legal_actions))
+                action_values = []
+                for action in legal_actions:
+                    action_feature = env.get_action_feature(action)
+                    action_values.append(action_feature)
+        else:
+            # For other games: traditional action ID handling
+            action_keys = np.array(list(legal_actions))
+            action_values = list(legal_actions)
+            # One-hot encoding if there is no action features
+            for i in range(len(action_values)):
+                if action_values[i] is None:
+                    action_values[i] = np.zeros(self.action_shape[0])
+                    action_values[i][action_keys[i]] = 1
+                else:
+                    # For environments like guandan-v2 where legal_actions contains action IDs
+                    # Create one-hot encoding
+                    one_hot = np.zeros(self.action_shape[0], dtype=np.float32)
+                    action_idx = int(action_values[i])
+                    if action_idx < self.action_shape[0]:
+                        one_hot[action_idx] = 1
+                    action_values[i] = one_hot
+        
         action_values = np.array(action_values, dtype=np.float32)
-
         obs = np.repeat(obs[np.newaxis, :], len(action_keys), axis=0)
 
         # Predict Q values

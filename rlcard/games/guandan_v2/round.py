@@ -96,10 +96,14 @@ class GuandanRound:
             # Check if all other players have passed (3 consecutive passes)
             if self.consecutive_passes >= 3:
                 # Wind-taking rule: next turn goes to last played player's teammate
-                next_player = self._apply_wind_taking_rule()
+                # 确保last_played_player已设置
+                if self.last_played_player is not None:
+                    next_player = self._apply_wind_taking_rule()
+                else:
+                    # 不应该发生，但回退到正常轮转
+                    next_player = self._get_next_player(self.current_player)
                 self.consecutive_passes = 0
                 self.greater_player = None
-                return next_player
             else:
                 # Normal rotation
                 next_player = self._get_next_player(self.current_player)
@@ -107,6 +111,7 @@ class GuandanRound:
             # Player successfully played cards
             self.consecutive_passes = 0
             self.greater_player = greater_player
+            # 更新last_played_player（关键：记录上一成功出牌的玩家）
             self.last_played_player = self.current_player
             next_player = self._get_next_player(self.current_player)
         

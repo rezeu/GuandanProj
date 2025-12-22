@@ -1,6 +1,6 @@
 """
-Environment for Guandan v2
-Wrapper for RL training - Optimized for direct GuandanAction passing (no action_id)
+Environment for Guandan v2 with DMC training support
+Optimized for direct GuandanAction passing (no action_id)
 """
 
 from collections import Counter, OrderedDict
@@ -11,14 +11,15 @@ from rlcard.games.guandan_v2.game import GuandanGame
 from rlcard.games.guandan_v2.action import GuandanAction
 from rlcard.games.guandan_v2.card_utils import ids_to_ranks, cards_to_ids, contains_cards, RANK_TO_VALUE, RANK_ORDER
 
-class GuandanEnv(Env):
+class GuandanEnvForDMC(Env):
     """
-    Guandan Environment for RL training
+    Guandan Environment optimized for DMC training
     
     State shape: [4, 1722] (4 players, 1722 features)
     Action shape: [4, 143] (4 players, 108 cards + 35 action features)
     
-    Key feature: Direct GuandanAction passing (no action_id mapping)
+    Key difference: This version directly passes GuandanAction objects
+    instead of using action_id mapping, avoiding ID collision issues.
     """
     
     def __init__(self, config=None):
@@ -81,7 +82,6 @@ class GuandanEnv(Env):
         extracted_state['raw_obs'] = player_state
         extracted_state['raw_legal_actions'] = legal_actions
         extracted_state['action_record'] = self.game.state['trace']
-        extracted_state['env'] = self  # 关键：提供环境引用，用于后续编码
         
         self.timestep = 0
         
@@ -146,8 +146,7 @@ class GuandanEnv(Env):
             'legal_actions': legal_actions,  # Now returns GuandanAction objects
             'raw_obs': state,
             'raw_legal_actions': [a for a in state['actions']],
-            'action_record': state['trace'],
-            'env': self  # 添加env引用，用于predict方法中调用get_action_feature
+            'action_record': state['trace']
         }
         
         return extracted_state
@@ -176,13 +175,12 @@ class GuandanEnv(Env):
         self.last_legal_actions = action_objects  # Store for encoding reference
         return action_objects
     
-    def step(self, action, raw_action=False):
+    def step(self, action):
         """
         Step forward with GuandanAction (no decoding needed!)
         
         Args:
             action: GuandanAction object
-            raw_action (boolean): Unused for guandan-v2, kept for compatibility
             
         Returns:
             (tuple): (next_state, next_player_id)
@@ -225,7 +223,6 @@ class GuandanEnv(Env):
         extracted_state['raw_obs'] = player_state
         extracted_state['raw_legal_actions'] = legal_actions
         extracted_state['action_record'] = self.game.state['trace']
-        extracted_state['env'] = self  # 关键：提供环境引用
         
         return extracted_state, player_id
     
@@ -254,38 +251,6 @@ class GuandanEnv(Env):
     def get_perfect_information(self):
         """Get perfect information for analysis"""
         return self.game.get_perfect_information()
-    
-    def get_state(self, player_id):
-        """
-        Get the state given player_id. Overridden to ensure complete state structure.
-        
-        Args:
-            player_id (int): The player ID
-            
-        Returns:
-            dict: The state including all required keys
-        """
-        # Get base state from game logic
-        player = self.game.players[player_id]
-        public = self.game.round.public
-        legal_actions = self.game.state['legal_actions']
-        
-        player_state = player.get_state(
-            public=public,
-            others_hand=[],
-            num_cards_left=[p.hand_size for p in self.game.players],
-            actions=legal_actions
-        )
-        
-        # Wrap with full state structure (same as reset/step)
-        state = self._extract_state(player_state)
-        state['legal_actions'] = self._get_legal_actions()
-        state['raw_obs'] = player_state
-        state['raw_legal_actions'] = legal_actions
-        state['action_record'] = self.game.state['trace']
-        state['env'] = self  # 关键：确保env引用存在
-        
-        return state
     
     def get_action_feature(self, action):
         """
@@ -447,9 +412,9 @@ class GuandanEnv(Env):
 # Test function
 def test_environment():
     """Test environment functionality"""
-    print("Testing Guandan v2 environment...")
+    print("Testing Guandan v2 DMC environment...")
     
-    env = GuandanEnv()
+    env = GuandanEnvForDMC()
     
     # Reset
     state, player_id = env.reset()
@@ -464,8 +429,7 @@ def test_environment():
     
     # Check legal actions are GuandanAction objects
     if len(state['legal_actions']) > 0:
-        from rlcard.games.guandan_v2.action import GuandanAction
-        assert isinstance(state['legal_actions'][0], GuandanAction), f"Legal actions should be GuandanAction objects, got {type(state['legal_actions'][0])}"
+        assert isinstance(state['legal_actions'][0], GuandanAction), "Legal actions should be GuandanAction objects"
         print(f"✓ Legal actions are GuandanAction objects")
     
     # Test action encoding
@@ -502,7 +466,7 @@ def test_environment():
     print(f"✓ Payoffs shape: {payoffs.shape}")
     
     print("✅ Environment test passed!")
-    print("\n🎉 All tests passed! This version directly passes GuandanAction objects.")
+    print("\n🎉 Direct GuandanAction passing design verified!")
 
 if __name__ == "__main__":
     test_environment()

@@ -1,3 +1,4 @@
+from collections import Counter
 """
 Core card utilities for Guandan v2
 Lightweight implementation using pure IDs and batch conversion functions
@@ -407,41 +408,26 @@ def can_beat(card_ids_a, card_ids_b, level_rank='2'):
 
 def contains_cards(hand_ids, target_ids, level_rank='2'):
     """
-    Check if hand contains target cards (considering wildcards)
-    
-    Args:
-        hand_ids: Player's hand
-        target_ids: Cards to check
-        level_rank: Current level rank
-        
-    Returns:
-        bool: True if hand contains target
+    手牌是否包含目标牌（含癞子替代）
     """
-    if not target_ids:
+    if not target_ids:                       # 空目标恒成立
         return True
-    
-    hand_ranks = ids_to_ranks(hand_ids)
+
+    # 1. 把 id 转成点数，顺便把癞子单拎出来
+    hand_ranks  = ids_to_ranks(hand_ids)
     target_ranks = ids_to_ranks(target_ids)
-    
-    hand_counts = count_ranks_with_wildcard(hand_ranks, level_rank)
-    target_counts = count_ranks_with_wildcard(target_ranks, level_rank)
-    
-    # Remove wildcard entry
-    hand_wildcards = hand_counts.get('__wildcards', 0)
-    if '__wildcards' in hand_counts:
-        del hand_counts['__wildcards']
-    target_wildcards = target_counts.get('__wildcards', 0)
-    if '__wildcards' in target_counts:
-        del target_counts['__wildcards']
-    
-    # Check if we can cover target with hand cards + wildcards
-    wildcards_needed = 0
-    for rank, count in target_counts.items():
-        hand_count = hand_counts.get(rank, 0)
-        if hand_count < count:
-            wildcards_needed += (count - hand_count)
-    
-    return wildcards_needed <= hand_wildcards
+
+    wild_rank = level_rank                   # 癞子点数
+    hand_wild  = hand_ranks.count(wild_rank) # 手癞子张数
+    target_wild = target_ranks.count(wild_rank)
+
+    # 2. 去掉癞子后再做 Counter
+    hand_cnt   = Counter(r for r in hand_ranks   if r != wild_rank)
+    target_cnt = Counter(r for r in target_ranks if r != wild_rank)
+
+    # 3. 逐点数算缺口，用癞子一次性补齐
+    wild_needed = sum(max(0, target_cnt[r] - hand_cnt[r]) for r in target_cnt)
+    return wild_needed <= (hand_wild - target_wild)
 
 # Pre-compute straight flush patterns for fast detection
 STRAIGHT_FLUSH_PATTERNS = []

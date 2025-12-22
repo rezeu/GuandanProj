@@ -44,7 +44,7 @@ if __name__ == '__main__':
             'no-limit-holdem',
             'uno',
             'gin-rummy',
-            'guandan'
+            'guandan-v2'
         ],
     )
     parser.add_argument(
