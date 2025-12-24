@@ -1,0 +1,9 @@
+Saving logs data to experiments/dmc_result\carrot/logs.csv
+Saving logs' fields to experiments/dmc_result\carrot/fields.csv
+Updated log fields: ['_tick', '_time', 'frames', 'mean_episode_return_0', 'loss_0', 'mean_episode_return_1', 'loss_1', 'mean_episode_return_2', 'loss_2', 'mean_episode_return_3', 'loss_3']
+Saving logs data to experiments/dmc_result\carrot/logs.csv
+Saving logs' fields to experiments/dmc_result\carrot/fields.csv
+Path to log file already exists. New data will be appended.
+Saving logs data to experiments/dmc_result\carrot/logs.csv
+Saving logs' fields to experiments/dmc_result\carrot/fields.csv
+Path to log file already exists. New data will be appended.
