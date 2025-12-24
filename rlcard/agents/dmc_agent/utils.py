@@ -19,6 +19,8 @@ import traceback
 import numpy as np
 import torch
 
+from rlcard.agents.dmc_agent import file_writer
+
 shandle = logging.StreamHandler()
 shandle.setFormatter(
     logging.Formatter(
@@ -60,6 +62,7 @@ def create_buffers(
             specs = dict(
                 done=dict(size=(T,), dtype=torch.bool),
                 episode_return=dict(size=(T,), dtype=torch.float32),
+                episode_length=dict(size=(T,), dtype=torch.int32),
                 target=dict(size=(T,), dtype=torch.float32),
                 state=dict(size=(T,)+tuple(state_shape[player_id]), dtype=torch.int8),
                 action=dict(size=(T,)+tuple(action_shape[player_id]), dtype=torch.int8),
@@ -113,6 +116,7 @@ def act(
 
         done_buf = [[] for _ in range(env.num_players)]
         episode_return_buf = [[] for _ in range(env.num_players)]
+        episode_length_buf = [[] for _ in range(env.num_players)]
         target_buf = [[] for _ in range(env.num_players)]
         state_buf = [[] for _ in range(env.num_players)]
         action_buf = [[] for _ in range(env.num_players)]
@@ -121,6 +125,7 @@ def act(
         while True:
             trajectories, payoffs = env.run(is_training=True)
             for p in range(env.num_players):
+                episode_len = len(trajectories[p][:-1]) // 2
                 size[p] += len(trajectories[p][:-1]) // 2
                 diff = size[p] - len(target_buf[p])
                 if diff > 0:
@@ -128,6 +133,8 @@ def act(
                     done_buf[p].append(True)
                     episode_return_buf[p].extend([0.0 for _ in range(diff-1)])
                     episode_return_buf[p].append(float(payoffs[p]))
+                    episode_length_buf[p].extend([0 for _ in range(diff - 1)])
+                    episode_length_buf[p].append(episode_len)
                     target_buf[p].extend([float(payoffs[p]) for _ in range(diff)])
                     # State and action
                     for i in range(0, len(trajectories[p])-2, 2):
@@ -143,12 +150,14 @@ def act(
                     for t in range(T):
                         buffers[p]['done'][index][t, ...] = done_buf[p][t]
                         buffers[p]['episode_return'][index][t, ...] = episode_return_buf[p][t]
+                        buffers[p]['episode_length'][index][t, ...] = episode_length_buf[p][t]
                         buffers[p]['target'][index][t, ...] = target_buf[p][t]
                         buffers[p]['state'][index][t, ...] = state_buf[p][t]
                         buffers[p]['action'][index][t, ...] = action_buf[p][t]
                     full_queue[p].put(index)
                     done_buf[p] = done_buf[p][T:]
                     episode_return_buf[p] = episode_return_buf[p][T:]
+                    episode_length_buf[p] = episode_length_buf[p][T:]
                     target_buf[p] = target_buf[p][T:]
                     state_buf[p] = state_buf[p][T:]
                     action_buf[p] = action_buf[p][T:]

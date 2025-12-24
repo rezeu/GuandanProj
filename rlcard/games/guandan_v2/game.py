@@ -134,22 +134,30 @@ class GuandanGame:
         return self.state, next_player_id
     
     def _is_game_over(self):
-        """Check if game is over (first team to finish wins)"""
-        # Check if any player has no cards
+        # Count how many players in each team have finished
+        team_finish_count = {team_id: 0 for team_id in self.teams.values()}
+
         for player in self.players:
             if len(player.current_hand) == 0:
-                return True
-        return False
+                team_id = self.teams[player.player_id]
+                team_finish_count[team_id] += 1
+
+        # Game over when any team has both players finished
+        return any(count == 2 for count in team_finish_count.values())
+
     
     def _get_winner(self):
-        """Determine winner (winning team)"""
-        # Find first player to finish
+        team_finish_count = {team_id: 0 for team_id in self.teams.values()}
+
         for player in self.players:
             if len(player.current_hand) == 0:
-                # Winner is the team of this player
-                return self.teams[player.player_id]
-        
-        # Should not reach here
+                team_id = self.teams[player.player_id]
+                team_finish_count[team_id] += 1
+
+        for team_id, count in team_finish_count.items():
+            if count == 2:
+                return team_id
+
         return None
     
     def get_player_num(self):

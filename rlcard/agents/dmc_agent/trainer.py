@@ -59,16 +59,33 @@ def learn(
     state = torch.flatten(batch['state'].to(device), 0, 1).float()
     action = torch.flatten(batch['action'].to(device), 0, 1).float()
     target = torch.flatten(batch['target'].to(device), 0, 1)
-    episode_returns = batch['episode_return'][batch['done']]
-    mean_episode_return_buf[position].append(torch.mean(episode_returns).to(device))
+    done_mask = batch['done']
+    episode_returns = batch['episode_return'][done_mask]
+    episode_lengths = batch['episode_length'][done_mask]
+
+    
 
     with lock:
+        if episode_returns.numel() > 0:
+            mean_episode_return_buf[position].append(
+                episode_returns.mean().to(device)
+            )
+            mean_ep_len = episode_lengths.float().mean().item()
+        else:
+            mean_ep_len = None
+
+        # ---- forward & loss ----
         values = agent.forward(state, action)
         loss = compute_loss(values, target)
+
         stats = {
-            'mean_episode_return_'+str(position): torch.mean(torch.stack([_r for _r in mean_episode_return_buf[position]])).item(),
+            'mean_episode_return_'+str(position): torch.mean(torch.stack([_r for _r in mean_episode_return_buf[position]])).item()
+                if len(mean_episode_return_buf[position]) > 0 else float('nan'),
             'loss_'+str(position): loss.item(),
         }
+
+        if mean_ep_len is not None:
+            stats['mean_episode_length_'+str(position)] = mean_ep_len
 
         optimizer.zero_grad()
         loss.backward()
@@ -246,6 +263,7 @@ class DMCTrainer:
         stat_keys = []
         for p in range(self.num_players):
             stat_keys.append('mean_episode_return_'+str(p))
+            stat_keys.append('mean_episode_length_'+str(p))
             stat_keys.append('loss_'+str(p))
         frames, stats = 0, {k: 0 for k in stat_keys}
 
