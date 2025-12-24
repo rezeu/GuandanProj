@@ -234,6 +234,7 @@ def tournament(env, num):
             for i, _ in enumerate(payoffs):
                 payoffs[i] += _payoffs[i]
             counter += 1
+        print(f'counter: {counter}/{num}', end='\r')
     for i, _ in enumerate(payoffs):
         payoffs[i] /= counter
     return payoffs

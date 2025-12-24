@@ -118,7 +118,7 @@ class DMCTrainer:
         training_device="0",
         savedir='experiments/dmc_result',
         total_frames=100000000000,
-        exp_epsilon=0.01,
+        exp_epsilon=0.1,
         batch_size=32,
         unroll_length=100,
         num_buffers=50,

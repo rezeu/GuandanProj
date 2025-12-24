@@ -109,7 +109,7 @@ def act(
 
         # Configure environment
         env.seed(i)
-        env.set_agents(model.get_agents())
+        all_agents = model.get_agents()
 
         done_buf = [[] for _ in range(env.num_players)]
         episode_return_buf = [[] for _ in range(env.num_players)]
@@ -119,40 +119,48 @@ def act(
         size = [0 for _ in range(env.num_players)]
 
         while True:
+            # 随机队友
+            pos_to_agent = list(range(env.num_players))
+            np.random.shuffle(pos_to_agent)
+            current_agents = [all_agents[pos_to_agent[p]] for p in range(env.num_players)]
+            env.set_agents(current_agents)
+
             trajectories, payoffs = env.run(is_training=True)
+
             for p in range(env.num_players):
-                size[p] += len(trajectories[p][:-1]) // 2
-                diff = size[p] - len(target_buf[p])
+                agent_id = pos_to_agent[p]
+                size[agent_id] += len(trajectories[p][:-1]) // 2
+                diff = size[agent_id] - len(target_buf[agent_id])
                 if diff > 0:
-                    done_buf[p].extend([False for _ in range(diff-1)])
-                    done_buf[p].append(True)
-                    episode_return_buf[p].extend([0.0 for _ in range(diff-1)])
-                    episode_return_buf[p].append(float(payoffs[p]))
-                    target_buf[p].extend([float(payoffs[p]) for _ in range(diff)])
+                    done_buf[agent_id].extend([False for _ in range(diff-1)])
+                    done_buf[agent_id].append(True)
+                    episode_return_buf[agent_id].extend([0.0 for _ in range(diff-1)])
+                    episode_return_buf[agent_id].append(float(payoffs[p]))
+                    target_buf[agent_id].extend([float(payoffs[p]) for _ in range(diff)])
                     # State and action
                     for i in range(0, len(trajectories[p])-2, 2):
                         state = trajectories[p][i]['obs']
                         action = env.get_action_feature(trajectories[p][i+1])
-                        state_buf[p].append(torch.from_numpy(state))
-                        action_buf[p].append(torch.from_numpy(action))
-                
-                while size[p] > T:
-                    index = free_queue[p].get()
+                        state_buf[agent_id].append(torch.from_numpy(state))
+                        action_buf[agent_id].append(torch.from_numpy(action))
+
+                while size[agent_id] > T:
+                    index = free_queue[agent_id].get()
                     if index is None:
                         break
                     for t in range(T):
-                        buffers[p]['done'][index][t, ...] = done_buf[p][t]
-                        buffers[p]['episode_return'][index][t, ...] = episode_return_buf[p][t]
-                        buffers[p]['target'][index][t, ...] = target_buf[p][t]
-                        buffers[p]['state'][index][t, ...] = state_buf[p][t]
-                        buffers[p]['action'][index][t, ...] = action_buf[p][t]
-                    full_queue[p].put(index)
-                    done_buf[p] = done_buf[p][T:]
-                    episode_return_buf[p] = episode_return_buf[p][T:]
-                    target_buf[p] = target_buf[p][T:]
-                    state_buf[p] = state_buf[p][T:]
-                    action_buf[p] = action_buf[p][T:]
-                    size[p] -= T
+                        buffers[agent_id]['done'][index][t, ...] = done_buf[agent_id][t]
+                        buffers[agent_id]['episode_return'][index][t, ...] = episode_return_buf[agent_id][t]
+                        buffers[agent_id]['target'][index][t, ...] = target_buf[agent_id][t]
+                        buffers[agent_id]['state'][index][t, ...] = state_buf[agent_id][t]
+                        buffers[agent_id]['action'][index][t, ...] = action_buf[agent_id][t]
+                    full_queue[agent_id].put(index)
+                    done_buf[agent_id] = done_buf[agent_id][T:]
+                    episode_return_buf[agent_id] = episode_return_buf[agent_id][T:]
+                    target_buf[agent_id] = target_buf[agent_id][T:]
+                    state_buf[agent_id] = state_buf[agent_id][T:]
+                    action_buf[agent_id] = action_buf[agent_id][T:]
+                    size[agent_id] -= T
 
     except KeyboardInterrupt:
         pass

@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Evaluate Guandan",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/evaluate.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--env", "guandan-v2",
+                "--models", "random",
+                "C:\\Files\\Projects\\GuandanProj\\experiments\\dmc_result\\apple\\1_646400.pth",
+                "random",
+                "C:\\Files\\Projects\\GuandanProj\\experiments\\dmc_result\\apple\\3_646400.pth",
+                "--num_games", "1"
+            ]
+        }
+    ]
+}
