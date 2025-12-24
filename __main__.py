@@ -3,7 +3,6 @@ import sys
 import traceback
 import torch
 from rlcard.agents.dmc_agent.model import DMCAgent
-
 # 导入自定义的环境和游戏类
 from rlcard.envs.guandan import GuandanEnv
 from rlcard.games.guandan.game import Game
@@ -27,7 +26,7 @@ class GuandanBot:
         self.env.game = self.game
         
         # 初始化DMCAgent
-        state_shape = [[2280], [2280], [2280], [2280]]
+        state_shape = [[2284], [2284], [2284], [2284]]
         action_shape = [[216] for _ in range(4)]
         
         # 这里需要加载训练好的模型，这里用随机策略作为示例
@@ -40,8 +39,13 @@ class GuandanBot:
             device="cpu"
         )
         model_path = f"data/0_0.pth"
-        self.agent = torch.load(model_path, map_location='cpu')
+
+
+        state_dict = torch.load(model_path,map_location='cpu')
+        self.agent.load_state_dict(state_dict)
+
         self.agent.eval()
+        self.agent.device = 'cpu'
         # 设置agent为评估模式
         
     def update_history(self, historys):
@@ -99,6 +103,7 @@ class GuandanBot:
 
 if __name__ == '__main__':
     try:
+        
         # 读取输入
         input_data = sys.stdin.readline()
         data = json.loads(input_data)

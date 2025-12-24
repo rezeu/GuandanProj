@@ -251,6 +251,7 @@ class DMCTrainer:
 
         # Load models if any
         if self.load_model and os.path.exists(self.checkpointpath):
+            print("Loading model from checkpoint")
             checkpoint_states = torch.load(
                     self.checkpointpath,
                     map_location="cuda:"+str(self.training_device) if self.training_device != "cpu" else "cpu"
@@ -346,7 +347,7 @@ class DMCTrainer:
                 model_weights_dir = os.path.expandvars(os.path.expanduser(
                     '%s/%s/%s' % (self.savedir, self.xpid, str(position)+'_'+str(frames)+'.pth')))
                 torch.save(
-                    learner_model.get_agent(position),
+                    learner_model.get_agent(position).state_dict(),
                     model_weights_dir
                 )
 
