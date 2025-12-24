@@ -5,14 +5,13 @@ class RandomAgent(object):
     ''' A random agent. Random agents is for running toy examples on the card games
     '''
 
-    def __init__(self, num_actions):
+    def __init__(self):
         ''' Initilize the random agent
 
         Args:
             num_actions (int): The size of the ouput action space
         '''
         self.use_raw = False
-        self.num_actions = num_actions
 
     @staticmethod
     def step(state):
@@ -39,7 +38,7 @@ class RandomAgent(object):
             action (int): The action predicted (randomly chosen) by the random agent
             probs (list): The list of action probabilities
         '''
-        probs = [0 for _ in range(self.num_actions)]
+        probs = [0 for _ in range(len(state['legal_actions']))]
         for i,_ in enumerate(state['legal_actions']):
             probs[i] = 1/len(state['legal_actions'])
 

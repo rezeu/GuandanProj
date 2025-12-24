@@ -224,7 +224,8 @@ def tournament(env, num):
     payoffs = [0 for _ in range(env.num_players)]
     counter = 0
     while counter < num:
-        _, _payoffs = env.run(is_training=False)
+        print(counter)
+        traj, _payoffs = env.run(is_training=False)
         if isinstance(_payoffs, list):
             for _p in _payoffs:
                 for i, _ in enumerate(payoffs):
@@ -234,6 +235,8 @@ def tournament(env, num):
             for i, _ in enumerate(payoffs):
                 payoffs[i] += _payoffs[i]
             counter += 1
+        for i in range(len(traj)):
+            print(traj[i][0].keys())
     for i, _ in enumerate(payoffs):
         payoffs[i] /= counter
     return payoffs

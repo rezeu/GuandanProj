@@ -1,7 +1,7 @@
 {
     "args": {},
     "date_end": null,
-    "date_start": "2025-12-24 11:17:37.700593",
+    "date_start": "2025-12-24 14:39:10.844591",
     "env": {
         "ALLUSERSPROFILE": "C:\\ProgramData",
         "APPDATA": "C:\\Users\\jianl\\AppData\\Roaming",
@@ -80,7 +80,7 @@
     },
     "git": {
         "branch": "guandan",
-        "commit": "feb6f4b51dd90cc2bcb665829803d9cfa3ac438e",
+        "commit": "a97c43ed008eee524618512c1c6c51beb0dd105b",
         "is_dirty": true,
         "path": "C:\\Files\\Projects\\GuandanProj\\.git"
     },

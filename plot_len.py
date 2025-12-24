@@ -16,9 +16,12 @@ data_lines = lines[1:]
 reader = csv.DictReader(data_lines, fieldnames=header)
 
 for row in reader:
-    frames.append(int(float(row["frames"])))
-    for p in returns:
-        returns[p].append(float(row[f"mean_episode_length_{p}"]))
+    try:
+        frames.append(int(float(row["frames"])))
+        for p in returns:
+            returns[p].append(float(row[f"mean_episode_length_{p}"]))
+    except ValueError:
+        continue
 
 plt.figure()
 for p, vals in returns.items():

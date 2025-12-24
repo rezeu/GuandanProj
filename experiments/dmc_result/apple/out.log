@@ -1,0 +1,3 @@
+Saving logs data to experiments/dmc_result\apple/logs.csv
+Saving logs' fields to experiments/dmc_result\apple/fields.csv
+Updated log fields: ['_tick', '_time', 'frames', 'mean_episode_return_0', 'mean_episode_length_0', 'loss_0', 'mean_episode_return_1', 'mean_episode_length_1', 'loss_1', 'mean_episode_return_2', 'mean_episode_length_2', 'loss_2', 'mean_episode_return_3', 'mean_episode_length_3', 'loss_3']
