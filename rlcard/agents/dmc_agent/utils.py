@@ -119,9 +119,9 @@ def act(
         size = [0 for _ in range(env.num_players)]
 
         while True:
-            # 随机队友
+            # 随机位置
             pos_to_agent = list(range(env.num_players))
-            np.random.shuffle(pos_to_agent)
+            # np.random.shuffle(pos_to_agent)
             current_agents = [all_agents[pos_to_agent[p]] for p in range(env.num_players)]
             env.set_agents(current_agents)
 

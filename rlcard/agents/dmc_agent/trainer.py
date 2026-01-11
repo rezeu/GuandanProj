@@ -256,10 +256,38 @@ class DMCTrainer:
                     map_location="cuda:"+str(self.training_device) if self.training_device != "cpu" else "cpu"
             )
             for p in range(self.num_players):
+                # 正常恢复所有 Agent 的权重和优化器
                 learner_model.get_agent(p).load_state_dict(checkpoint_states["model_state_dict"][p])
                 optimizers[p].load_state_dict(checkpoint_states["optimizer_state_dict"][p])
+
+            log.info("Intervention: Cloning Agent 1 weights to Agent 0 and resetting Optimizer 0...")
+            
+            # 1. 权重拷贝：用 1 的权重覆盖 0
+            # 使用 deepcopy 确保完全独立
+            import copy
+            weights_1 = copy.deepcopy(learner_model.get_agent(1).state_dict())
+            learner_model.get_agent(0).load_state_dict(weights_1)
+            
+            # 2. 优化器重置：彻底抛弃 Agent 0 的历史动量
+            # 必须重新实例化，不能用 load_state_dict
+            optimizers[0] = torch.optim.RMSprop(
+                learner_model.get_agent(0).parameters(),
+                lr=self.learning_rate,
+                momentum=self.momentum,
+                eps=self.epsilon,
+                alpha=self.alpha
+            )
+            # --- 强制干预结束 ---
+
+            # 同步给所有设备上的 Actor 模型
+            for p in range(self.num_players):
                 for device in self.device_iterator:
                     models[device].get_agent(p).load_state_dict(learner_model.get_agent(p).state_dict())
+            # for p in range(self.num_players):
+            #     learner_model.get_agent(p).load_state_dict(checkpoint_states["model_state_dict"][p])
+            #     optimizers[p].load_state_dict(checkpoint_states["optimizer_state_dict"][p])
+            #     for device in self.device_iterator:
+            #         models[device].get_agent(p).load_state_dict(learner_model.get_agent(p).state_dict())
             stats = checkpoint_states["stats"]
             frames = checkpoint_states["frames"]
             log.info(f"Resuming preempted job, current stats:\n{stats}")
@@ -274,6 +302,7 @@ class DMCTrainer:
                     args=(i, device, self.T, free_queue[device], full_queue[device], models[device], buffers[device], self.env))
                 actor.start()
                 actor_processes.append(actor)
+
 
         def batch_and_learn(i, device, position, local_lock, position_lock, lock=threading.Lock()):
             """Thread target for the learning process."""
